@@ -1,6 +1,6 @@
-## ERPNext Shopify
+## ERPNext MWS
 
-Shopify connector for ERPNext
+MWS connector for ERPNext
 
 #### License
 
