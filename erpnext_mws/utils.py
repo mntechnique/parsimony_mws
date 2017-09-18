@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+import mws
 from .exceptions import MWSSetupError
 
 def is_mws_enabled():
@@ -28,3 +29,12 @@ name=None, request_data={}):
 	
 	log.save(ignore_permissions=True)
 	frappe.db.commit()
+
+def setup_mws_orders():
+	orders_api = mws.Orders(
+	     access_key=os.environ['MWS_ACCESS_KEY'],
+	     secret_key=os.environ['MWS_SECRET_KEY'],
+	     account_id=os.environ['MWS_ACCOUNT_ID'],
+	     region='UK',  # if necessary
+ 	)
+	return orders_api

@@ -9,7 +9,7 @@ from .exceptions import MWSError
 from .sync_orders import sync_orders
 from .sync_customers import sync_customers
 from .sync_products import sync_products, update_item_stock_qty
-from .utils import disable_mws_sync_on_exception, make_mws_log
+from .utils import disable_mws_sync_on_exception, make_mws_log, setup_mws_orders
 from frappe.utils.background_jobs import enqueue
 
 @frappe.whitelist()
@@ -20,6 +20,7 @@ def sync_mws():
 
 @frappe.whitelist()
 def sync_mws_resources():
+	orders = setup_mws_orders()
 	mws_settings = frappe.get_doc("MWS Settings")
 
 	make_mws_log(title="Sync Job Queued", status="Queued", method=frappe.local.form_dict.cmd, message="Sync Job Queued")
