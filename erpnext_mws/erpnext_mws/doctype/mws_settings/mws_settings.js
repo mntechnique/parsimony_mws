@@ -5,7 +5,7 @@ frappe.provide("erpnext_mws.mws_settings");
 
 frappe.ui.form.on("MWS Settings", "onload", function(frm, dt, dn){
 	frappe.call({
-		method:"erpnext_mws.erpnext_mws.doctype.mws_settings.mwsy_settings.get_series",
+		method:"erpnext_mws.erpnext_mws.doctype.mws_settings.mws_settings.get_series",
 		callback:function(r){
 			$.each(r.message, function(key, value){
 				set_field_options(key, value)

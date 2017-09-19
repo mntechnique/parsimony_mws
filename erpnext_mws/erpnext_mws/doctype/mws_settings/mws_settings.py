@@ -15,12 +15,7 @@ class MWSSettings(Document):
 			self.validate_access()
 
 	def validate_access_credentials(self):
-		if self.app_type == "Private":
-			pass
-
-		else:
-			if not (self.mws_access_token):
-				pass
+		pass
 
 	def validate_access(self):
 		try:
@@ -35,5 +30,5 @@ class MWSSettings(Document):
 @frappe.whitelist()
 def get_series():
 		return {
-			#"sales_order_series" : frappe.get_meta("Sales Order").get_options("naming_series") or "SO-MWS-",
+			"sales_order_series" : frappe.get_meta("Sales Order").get_options("naming_series") or "SO-MWS-",
 		}

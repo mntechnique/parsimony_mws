@@ -44,7 +44,7 @@ fixtures = ["Custom Field"]
 # ------------
 
 # before_install = "erpnext_mws.install.before_install"
-after_install = "erpnext_mws.after_install.create_weight_uom"
+#after_install = "erpnext_mws.after_install.create_weight_uom"
 
 # Desk Notifications
 # ------------------

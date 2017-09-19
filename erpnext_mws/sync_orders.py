@@ -48,7 +48,7 @@ def create_sales_order(mws_order, mws_settings, company=None):
 			"mws_order_id": id,
 			"customer": frappe.db.get_value("Customer", {"mws_customer_id": customer_id}, "name"),
 			"delivery_date": nowdate(),
-			"company": mws_settings.company,
+			##"company": mws_settings.company,
 			"selling_price_list": mws_settings.price_list,
 			"ignore_pricing_rule": 1,
 			"items": get_order_items(items, mws_settings),

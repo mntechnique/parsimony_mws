@@ -7,8 +7,6 @@ import frappe
 from frappe import _
 from .exceptions import MWSError
 from .sync_orders import sync_orders
-from .sync_customers import sync_customers
-from .sync_products import sync_products, update_item_stock_qty
 from .utils import disable_mws_sync_on_exception, make_mws_log, setup_mws_orders
 from frappe.utils.background_jobs import enqueue
 
@@ -27,6 +25,7 @@ def sync_mws_resources():
 	
 	if mws_settings.enable_mws:
 		try :
+			sync_orders()
 			frappe.db.set_value("MWS Settings", None, "last_sync_datetime", now_time)
 			
 			make_mws_log(title="Sync Completed", status="Success", method=frappe.local.form_dict.cmd)
