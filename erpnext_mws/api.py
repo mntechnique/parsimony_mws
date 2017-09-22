@@ -22,22 +22,25 @@ def sync_mws_resources():
 	mws_settings = frappe.get_doc("MWS Settings")
 
 	make_mws_log(title="Sync Job Queued", status="Queued", method=frappe.local.form_dict.cmd, message="Sync Job Queued")
-	
 	if mws_settings.enable_mws:
 		try :
 			sync_orders()
+			now_time = frappe.utils.now()
 			frappe.db.set_value("MWS Settings", None, "last_sync_datetime", now_time)
 			
 			make_mws_log(title="Sync Completed", status="Success", method=frappe.local.form_dict.cmd)
 		except Exception, e:
-			pass
-	elif frappe.local.form_dict.cmd == "erpnext_mws.api.sync_mws":
+			make_mws_log(title="sync has terminated", status="Error", method="sync_mws_resources",
+					message=frappe.get_traceback(), exception=True)
+
+	if frappe.local.form_dict.cmd == "erpnext_mws.api.sync_mws":
 		make_mws_log(
 			title="MWS connector is disabled",
 			status="Error",
 			method="sync_mws_resources",
 			message=_("""MWS connector is not enabled. Click on 'Connect to MWS' to connect ERPNext and your MWS Seller Account"""),
 			exception=True)
+
 
 def validate_mws_settings(mws_settings):
 	"""

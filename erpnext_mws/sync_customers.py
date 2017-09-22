@@ -4,7 +4,7 @@ from frappe import _
 from .utils import make_mws_log
 
 
-def create_customer(order):
+def create_customer_if_needed(order):
 	import frappe.utils.nestedset
 	mws_settings = frappe.get_doc("MWS Settings", "MWS Settings")
 	cust_name = order['BuyerName']['value']

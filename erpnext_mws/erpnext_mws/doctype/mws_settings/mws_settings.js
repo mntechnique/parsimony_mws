@@ -21,6 +21,51 @@ frappe.ui.form.on("MWS Settings", "app_type", function(frm, dt, dn) {
 })
 
 frappe.ui.form.on("MWS Settings", "refresh", function(frm){
+	if(!frm.doc.__islocal && frm.doc.enable_mws === 1){
+		frm.toggle_reqd("sales_invoice_series", frm.doc.sync_sales_invoice);
+
+		frm.add_custom_button(__('Sync MWS'), function() {
+			frappe.call({
+				method:"erpnext_mws.api.sync_mws",
+			})
+		}).addClass("btn-primary");
+	}
+	frm.add_custom_button(__("MWS Log"), function(){
+		frappe.set_route("List", "MWS Log");
+	})
+	
+	frm.add_custom_button(__("Reset Last Sync Date"), function(){
+		var dialog = new frappe.ui.Dialog({
+			title: __("Reset Last Sync Date"),
+			fields: [
+				{"fieldtype": "Datetime", "label": __("Date"), "fieldname": "last_sync_date", "reqd": 1 },
+				{"fieldtype": "Button", "label": __("Set last sync date"), "fieldname": "set_last_sync_date", "cssClass": "btn-primary"},
+			]
+		});
+
+		dialog.fields_dict.set_last_sync_date.$input.click(function() {
+			args = dialog.get_values();
+			if(!args) return;
+
+			frm.set_value("last_sync_datetime", args['last_sync_date']);
+			frm.save();
+
+			dialog.hide();
+		});
+		dialog.show();
+	})
+
+
+	frappe.call({
+		method: "erpnext_mws.api.get_log_status",
+		callback: function(r) {
+			if(r.message){
+				frm.dashboard.set_headline_alert(r.message.text, r.message.alert_class)
+			}
+		}
+	})
+
+
 })
 
 
