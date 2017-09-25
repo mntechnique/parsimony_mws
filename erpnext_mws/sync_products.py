@@ -3,7 +3,7 @@ import frappe
 from frappe import _
 import requests.exceptions
 from .exceptions import MWSError
-from .utils import make_mws_log, disable_mws_sync_for_item
+from .utils import make_mws_log, disable_mws_sync_for_item, limit_text
 from erpnext.stock.utils import get_bin
 from frappe.utils import cstr, flt, cint, get_files_path
 from .utils import setup_mws_products
@@ -22,7 +22,7 @@ def create_item_if_needed(mws_item, mws_settings):
 		"sync_with_mws": 1,
 		"is_stock_item": 1,
 		"item_code": item_code,
-		"item_name": mws_item['Title']['value'],
+		"item_name": limit_text(mws_item['Title']['value']),
 		"description": "",
 		"mws_description": "",
 		"item_group": get_item_group(attributes['ProductGroup']['value']),

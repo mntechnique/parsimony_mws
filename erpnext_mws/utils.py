@@ -8,6 +8,10 @@ import json
 from .exceptions import MWSSetupError
 from mws.mws import Orders, Products
 
+
+def limit_text(text, limit=140):
+	return text[0:limit-1]
+
 def disable_mws_sync_for_item(item, rollback=False):
 	if rollback:
 		frappe.db.rollback()
@@ -67,6 +71,7 @@ def setup_mws_products():
 		mws_settings.mws_seller_id, 
 		auth_token=mws_settings.mws_auth_token)
 	return conn
+
 
 
 def disable_mws_sync_on_exception():

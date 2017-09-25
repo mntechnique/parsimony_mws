@@ -10,6 +10,9 @@ def create_customer_if_needed(order):
 	cust_name = order['BuyerName']['value']
 	cust_id = order['BuyerEmail']['value']
 	try:
+		current_customer = frappe.db.get_value("Customer", cust_id, "name")
+		if not current_customer is None:
+			return
 		customer = frappe.get_doc({
 			"doctype": "Customer",
 			"name": cust_id,
