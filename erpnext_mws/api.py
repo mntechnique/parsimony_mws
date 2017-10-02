@@ -1,14 +1,19 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
+# -*- coding: utf-8 -*- # Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
 from __future__ import unicode_literals
 import frappe
+import time
 from frappe import _
 from .exceptions import MWSError
 from .sync_orders import sync_orders
+from .sync_products import sync_products
 from .utils import disable_mws_sync_on_exception, make_mws_log, setup_mws_orders
 from frappe.utils.background_jobs import enqueue
+
+def do_a_sync( sync_fn ):
+	sync_fn()
+	time.sleep( 5 )
 
 @frappe.whitelist()
 def sync_mws():
@@ -24,7 +29,8 @@ def sync_mws_resources():
 	make_mws_log(title="Sync Job Queued", status="Queued", method=frappe.local.form_dict.cmd, message="Sync Job Queued")
 	if mws_settings.enable_mws:
 		try :
-			sync_orders()
+			do_a_sync(sync_products)
+			do_a_sync(sync_orders)
 			now_time = frappe.utils.now()
 			frappe.db.set_value("MWS Settings", None, "last_sync_datetime", now_time)
 			

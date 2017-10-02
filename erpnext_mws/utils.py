@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 import frappe
 import json
 from .exceptions import MWSSetupError
-from mws.mws import Orders, Products
+from mws.mws import Orders, Products, Reports
 
 
 def limit_text(text, limit=140):
@@ -71,6 +71,14 @@ def setup_mws_products():
 		mws_settings.mws_seller_id, 
 		auth_token=mws_settings.mws_auth_token)
 	return conn
+def setup_mws_reports():
+	mws_settings = frappe.get_doc("MWS Settings", "MWS Settings")
+	conn = Reports(mws_settings.mws_aws_access_key, 
+		mws_settings.mws_aws_secret_key, 
+		mws_settings.mws_seller_id, 
+		auth_token=mws_settings.mws_auth_token)
+	return conn
+
 
 
 

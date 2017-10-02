@@ -2,18 +2,61 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import requests.exceptions
+import StringIO
+import csv
+import time
 from .exceptions import MWSError
 from .utils import make_mws_log, disable_mws_sync_for_item, limit_text
 from erpnext.stock.utils import get_bin
 from frappe.utils import cstr, flt, cint, get_files_path
-from .utils import setup_mws_products
+from .utils import setup_mws_products, setup_mws_reports
+from mws.utils import object_dict
 
-def create_item_if_needed(mws_item, mws_settings):
+def sync_products():
+	mws_settings = frappe.get_doc("MWS Settings", "MWS Settings")
+	reports = setup_mws_reports()
+	result = reports.request_report("_GET_FLAT_FILE_OPEN_LISTINGS_DATA_", 
+		start_date="2015-10-23T12:00:00Z", 
+		end_date="2017-10-02T12:00:00Z", 
+		marketplaceids=[mws_settings.mws_marketplace_id])
+	response = result._response_dict['RequestReportResult']
+	report = response['ReportRequestInfo']
+	id = report['ReportRequestId']['value']
+	while True:
+		f_report = reports.get_report_list(requestids=(id,))
+		response = f_report._response_dict['GetReportListResult']
+		if "ReportInfo" in response.keys():
+			report_info = response['ReportInfo']
+			report = reports.get_report(report_info['ReportId']['value'])
+			csv_text = report.original
+			string_io = StringIO.StringIO(csv_text)
+			csv_rows = list( csv.reader( string_io, delimiter=str( '\t' ) )	)
+			create_items_if_needed( csv_rows, mws_settings )
+			break
+		time.sleep( 5 )
+
+def create_items_if_needed( csv_rows, mws_settings ):
 	conn = setup_mws_products()
-	item_code =  mws_item['ASIN']['value']
-	response = conn.get_matching_product(mws_settings.mws_marketplace_id, [mws_item['ASIN']['value']])._response_dict
-	product = response['GetMatchingProductResult']['Product']
+	## skip the headers from the csv
+	asins = [ row[ 1 ] for row in csv_rows[1:] ] 
+	response = conn.get_matching_product(mws_settings.mws_marketplace_id, asins)._response_dict
+	results = response['GetMatchingProductResult']
+        if type ( results ) is object_dict:
+           results = [ results ]
+
+	for index in range( 0, len( results ) ):
+		sku = csv_rows[ index ][ 0 ]
+		result = results[ index ]
+		if not "Error" in result.keys():
+			create_item_if_needed( sku, result, mws_settings )
+			continue
+		make_mws_log(status="Error", method="create_items_if_needed", message=result['Error']['Message']['value'],
+				request_data=result, exception=False)
+	
+def create_item_if_needed(sku, result, mws_settings):
+	product = result['Product']
 	attributes = product['AttributeSets']['ItemAttributes']
+	item_code = result['ASIN']['value']
 	warehouse = mws_settings.warehouse
 
 	item_dict = {
@@ -22,14 +65,14 @@ def create_item_if_needed(mws_item, mws_settings):
 		"sync_with_mws": 1,
 		"is_stock_item": 1,
 		"item_code": item_code,
-		"item_name": limit_text(mws_item['Title']['value']),
+		"item_name": limit_text(attributes['Title']['value']),
 		"description": "",
 		"mws_description": "",
 		"item_group": get_item_group(attributes['ProductGroup']['value']),
 		"has_variants": False,
 		"attributes":[],
 		"stock_uom": _("Nos"),
-		"stock_keeping_unit": mws_item['SellerSKU']['value'],
+		"stock_keeping_unit": sku,
 		"default_warehouse": warehouse,
 		"image": attributes['SmallImage']['URL']['value'],
 		"weight_uom": _("Nos"),
@@ -43,7 +86,7 @@ def create_item_if_needed(mws_item, mws_settings):
 		name = new_item.name
 
 	else:
-		item_details = get_item_details(mws_item)
+		item_details = get_item_details( item_code )
 		update_item(item_details, item_dict)
 	frappe.db.commit()
 
@@ -80,10 +123,10 @@ def update_item(item_details, item_dict):
 	item.flags.ignore_mandatory = True
 	item.save()
 
-def get_item_details(mws_item):
+def get_item_details(asin):
 	item_details = {}
 
-	item_details = frappe.db.get_value("Item", {"mws_product_id": mws_item['ASIN']['value']},
+	item_details = frappe.db.get_value("Item", {"mws_product_id": asin},
 		["name", "stock_uom", "item_name"], as_dict=1)
 
 	return item_details

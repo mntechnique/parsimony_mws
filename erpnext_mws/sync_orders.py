@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 import frappe
 import time
+import dateutil.parser
 from frappe import _
 from .exceptions import MWSError
-from .utils import make_mws_log
+from .utils import make_mws_log, limit_text
 from .sync_customers import create_customer_if_needed
 from .sync_products import create_item_if_needed
 from frappe.utils import flt, nowdate, cint
@@ -46,12 +47,14 @@ def create_sales_order(mws_order, mws_settings, company=None):
 	   items = [ items ]
 
 	if not so:
+		ship_date = mws_order['LatestShipDate']['value']
+	   	delivery_date = dateutil.parser.parse(ship_date).strftime("%Y-%m-%d")
 		so = frappe.get_doc({
 			"doctype": "Sales Order",
 			"naming_series": "SO-MWS-",
 			"mws_order_id": id,
 			"customer": frappe.db.get_value("Customer", {"mws_customer_id": customer_id}, "name"),
-			"delivery_date": nowdate(),
+			"delivery_date": delivery_date,
 			##"company": mws_settings.company,
 			#"selling_price_list": mws_settings.price_list,
 			"ignore_pricing_rule": 1,
@@ -77,11 +80,10 @@ def create_sales_order(mws_order, mws_settings, company=None):
 def get_order_items(order_items, mws_settings):
 	items = []
 	for mws_item in order_items:
-		create_item_if_needed(mws_item, mws_settings)
 		item_code = get_item_code(mws_item)
 		items.append({
 			"item_code": item_code,
-			"item_name": mws_item['Title']['value'],
+			"item_name": limit_text(mws_item['Title']['value']),
 			"description": "",
 			"rate": mws_item['ItemPrice']['Amount']['value'],
 			"delivery_date": nowdate(),
