@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import frappe
+import pycountry
 from frappe import _
 from .utils import make_mws_log
 
@@ -32,9 +33,10 @@ def create_customer_if_needed(order):
 
 def create_customer_address(customer, order):
 	try :
-		address_type = _("Billing")
+		address_type = _("Shipping")
 		address_title = order['BuyerName']['value']
 		shipping_address = order['ShippingAddress']
+		country = pycountry.countries.get(alpha_2=shipping_address['CountryCode']['value'])
 		frappe.get_doc({
 			"doctype": "Address",
 			##"mws_address_id": "",
@@ -45,7 +47,7 @@ def create_customer_address(customer, order):
 			"city": shipping_address['City']['value'],
 			"state": shipping_address['StateOrRegion']['value'],
 			"pincode": shipping_address['PostalCode']['value'],
-			"country":  shipping_address['CountryCode']['value'],
+			"country":  country.name,
 			#"phone": "",
 			"email_id": order['BuyerEmail']['value'],
 			"links": [{

@@ -25,8 +25,6 @@ def sync_orders():
 						continue
 					create_customer_if_needed( order )
 					create_sales_order(order, mws_settings)
-					time.sleep( 3 )
-
 			    except MWSError, e:
 					make_mws_log(status="Error", method="sync_mws_orders", message=frappe.get_traceback(),
 						request_data=order, exception=True)
