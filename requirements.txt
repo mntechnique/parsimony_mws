@@ -1,3 +1,4 @@
 frappe
 erpnext
 mws==0.7.3
+pycountry==17.9.23

@@ -5,6 +5,7 @@
 from __future__ import unicode_literals
 import frappe
 import json
+import time
 from .exceptions import MWSSetupError
 from mws.mws import Orders, Products, Reports
 
@@ -19,6 +20,9 @@ def disable_mws_sync_for_item(item, rollback=False):
 	item.sync_qty_with_mws = 0
 	item.save(ignore_permissions=True)
 	frappe.db.commit()
+
+def do_sync_timeout():
+	time.sleep( 20 )
 
 def is_mws_enabled():
 	mws_settings = frappe.get_doc("MWS Settings")

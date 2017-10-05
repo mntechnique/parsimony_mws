@@ -9,7 +9,7 @@ from .exceptions import MWSError
 from .utils import make_mws_log, disable_mws_sync_for_item, limit_text
 from erpnext.stock.utils import get_bin
 from frappe.utils import cstr, flt, cint, get_files_path
-from .utils import setup_mws_products, setup_mws_reports
+from .utils import setup_mws_products, setup_mws_reports, do_sync_timeout
 from mws.utils import object_dict
 
 def sync_products():
@@ -33,7 +33,7 @@ def sync_products():
 			csv_rows = list( csv.reader( string_io, delimiter=str( '\t' ) )	)
 			create_items_if_needed( csv_rows, mws_settings )
 			break
-		time.sleep( 5 )
+		do_sync_timeout()
 
 def create_items_if_needed( csv_rows, mws_settings ):
 	conn = setup_mws_products()
