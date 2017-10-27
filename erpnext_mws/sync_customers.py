@@ -11,7 +11,7 @@ def create_customer_if_needed(order):
 	cust_name = order['BuyerName']['value']
 	cust_id = order['BuyerEmail']['value']
 	try:
-		current_customer = frappe.db.get_value("Customer", cust_id, "name")
+		current_customer = frappe.db.get_value("Customer", {"mws_customer_id": cust_id}, "name")
 		if not current_customer is None:
 			return
 		customer = frappe.get_doc({
@@ -20,6 +20,7 @@ def create_customer_if_needed(order):
 			"customer_name" : cust_name,
 			"sync_with_mws": 1,
 			"territory": frappe.utils.nestedset.get_root_of("Territory"),
+			"mws_customer_id": cust_id,
 			"customer_type": _("Individual")
 		})
 		customer.flags.ignore_mandatory = True
